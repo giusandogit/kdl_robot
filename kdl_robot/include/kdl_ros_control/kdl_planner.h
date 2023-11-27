@@ -45,6 +45,7 @@ public:
     KDLPlanner(double _trajDuration, double _accDuration,Eigen::Vector3d _trajInit, Eigen::Vector3d _trajEnd); 
     KDLPlanner(double _trajDuration, Eigen::Vector3d _trajInit, double _radius);
 
+    //trajectory_point compute_trajectory(double time, int selection_); //  Not working properly because of scope issues
     trajectory_point compute_trajectory(double time);
 
 private:

@@ -219,17 +219,17 @@ KDL::Jacobian KDLRobot::getEEBodyJacobian()
 //     return s_J_dot_ee_.data;
 // }
 
-Eigen::MatrixXd KDLRobot::getEEJacDotqDot()     // Modified function for J_dot * q_dot
-{
-    return s_J_dot_ee_.data;
-}
-
-// KDL::Jacobian KDLRobot::getEEJacDotqDot()    // Not working
+// Eigen::MatrixXd KDLRobot::getEEJacDotqDot()            // Not working 
 // {
 //     return s_J_dot_ee_.data;
 // }
 
-// Eigen::VectorXd KDLRobot::getEEJacDotqDot()  // Original version
+KDL::Jacobian KDLRobot::getEEJacDotqDot()                 // Modified function for J_dot
+{
+    return s_J_dot_ee_;
+}
+
+// Eigen::VectorXd KDLRobot::getEEJacDotqDot()            // Original version
 // {
 //     return s_J_dot_ee_.data;
 // }

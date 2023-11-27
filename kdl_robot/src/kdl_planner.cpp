@@ -102,19 +102,19 @@ void KDLPlanner::cubic_polinomial (double time, double &s, double &s_d, double &
   double s_i=std::sqrt(std::pow(trajInit_(0),2)+std::pow(trajInit_(1),2)+std::pow(trajInit_(2),2));
   double s_f=std::sqrt(std::pow(trajEnd_(0),2)+std::pow(trajEnd_(1),2)+std::pow(trajEnd_(2),2));
 
-  // Coefficients computed offline based on boundary conditions
+  // Coefficients of the polynomial
         double a0 = s_i;
         double a1 = 0;
         double a2 = 3*(s_f-s_i)/std::pow(trajDuration_,2);
         double a3 = -2*(s_f-s_i)/std::pow(trajDuration_,3);
 
-  // Calculate s(t) = curvilinear abscissa (arc length) 
+  // s(t) = curvilinear abscissa (arc length) 
         s = a3*std::pow(time,3) + a2* std::pow(time,2) + a1*time + a0;
  
-  // Calculate the first derivative of s(t)
+  // s_dot(t)
         s_d = 3*a3* std::pow(time,2) + 2*a2*time + a1;
  
-  // Calculate the second derivative of s(t)
+  // s_ddot(t)
         s_dd = 6*a3*time + 2*a2;
     
 }
@@ -165,18 +165,24 @@ KDL::Trajectory* KDLPlanner::getTrajectory()
 
 //--------------------------------- Modified compute_trajectory for Step 2 --------------------------------------------
 
+//trajectory_point KDLPlanner::compute_trajectory(double time, int selection_)  // Not working because of scope issues
 trajectory_point KDLPlanner::compute_trajectory(double time)
 {
-int selection = 4; // !! REMEMBER TO UNCOMMENT THE RIGHT CONSTRUCTOR IN "kdl_robot_test.cpp" (lines 157, 158)!!
+ int selection_ = 5; // !! REMEMBER TO UNCOMMENT THE RIGHT CONSTRUCTOR IN "kdl_robot_test.cpp" (lines 157, 158)!!
 /*
-    selection = 1 --> Original Linear Trajectory from Prof. Selvaggio
-    selection = 2 --> Linear Trajectory with Trapezoidal Velocity Profile
-    selection = 3 --> Linear Trajectory with Cubic Polynomial Velocity Profile
-    selection = 4 --> Circular Trajectory with Trapezoidal Velocity Profile
-    selection = 5 --> Circular Trajectory with Cubic Polynomial Velocity Profile
+    selection_ = 1 --> Original Linear Trajectory from Prof. Selvaggio
+    selection_ = 2 --> Linear Trajectory with Trapezoidal Velocity Profile
+    selection_ = 3 --> Linear Trajectory with Cubic Polynomial Velocity Profile
+    selection_ = 4 --> Circular Trajectory with Trapezoidal Velocity Profile
+    selection_ = 5 --> Circular Trajectory with Cubic Polynomial Velocity Profile
 */
+if (selection_ > 5 or selection_ <= 0) //  if CASE to be sure I am running a legit trajectory
+{
+  selection_ = 2;
 
-  if (selection == 1)  // Original Linear Trajectory
+}
+
+if (selection_ == 1)  // Original Linear Trajectory
 {
   /*trapezoidal velocity profile with accDuration_ acceleration time period and trajDuration_ total duration.
   time = current time
@@ -213,7 +219,7 @@ int selection = 4; // !! REMEMBER TO UNCOMMENT THE RIGHT CONSTRUCTOR IN "kdl_rob
 }
     //---------------- Step 2c: Linear Trajectory computation -----------------------------------
 
-else if (selection == 2)  // Linear Trajectory with Trapezoidal Velocity Profile
+else if (selection_ == 2)  // Linear Trajectory with Trapezoidal Velocity Profile
 {
  trajectory_point traj;
 
@@ -228,7 +234,7 @@ else if (selection == 2)  // Linear Trajectory with Trapezoidal Velocity Profile
     
 }
 
-else if (selection == 3)  // Linear Trajectory with Cubic Polynomial Velocity Profile
+else if (selection_ == 3)  // Linear Trajectory with Cubic Polynomial Velocity Profile
 {
   trajectory_point traj;
 
@@ -247,8 +253,8 @@ else if (selection == 3)  // Linear Trajectory with Cubic Polynomial Velocity Pr
 
     //----------------------- Step 2b: Circular Trajectory computation ----------------------------
     
-else  if (selection == 4)  // Circular Trajectory with Trapezoidal Velocity Profile
-{
+else  if (selection_ == 4)  // Circular Trajectory with Trapezoidal Velocity Profile  ----->  // This trajectory is not simulated correctly with the Inverse Kinematics controller
+{                                                                                             // in the Operational Space (I tried several gains and all the other simulations work fine)
   trajectory_point traj;
 
   double s,s_d,s_dd;
@@ -270,7 +276,7 @@ else  if (selection == 4)  // Circular Trajectory with Trapezoidal Velocity Prof
   
 }
 
-else if (selection == 5) // Circular Trajectory with Cubic Polynomial Velocity Profile
+else if (selection_ == 5) // Circular Trajectory with Cubic Polynomial Velocity Profile
 {
   trajectory_point traj;
 

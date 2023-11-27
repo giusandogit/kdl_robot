@@ -25,6 +25,8 @@ Eigen::VectorXd KDLController::idCntr(KDL::JntArray &_qd,
 
 //----------------------------- Modifications for Step 4 -------------------------------------------
 
+// I changed the names of some elements which were not defined accordingly to the "robot_" class
+
 Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
                                       KDL::Twist &_desVel,
                                       KDL::Twist &_desAcc,
@@ -32,18 +34,19 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
                                       double _Kdp, double _Kdo)
 {
    // calculate gain matrices
-   Eigen::Matrix<double,6,6> Kp, Kd;
+   //Eigen::Matrix<double,6,6> Kp, Kd;     // Original version
+   Eigen::Matrix<double,6,6> Kp = Eigen::Matrix<double,6,6>::Zero();  // INITIALIZED TO ZERO
+   Eigen::Matrix<double,6,6> Kd = Eigen::Matrix<double,6,6>::Zero();  // INITIALIZED TO ZERO
    Kp.block(0,0,3,3) = _Kpp*Eigen::Matrix3d::Identity();
    Kp.block(3,3,3,3) = _Kpo*Eigen::Matrix3d::Identity();
    Kd.block(0,0,3,3) = _Kdp*Eigen::Matrix3d::Identity();
    Kd.block(3,3,3,3) = _Kdo*Eigen::Matrix3d::Identity();
 
    // read current state
-   Eigen::Matrix<double,6,7> J = toEigen(robot_->getEEJacobian());
+   Eigen::Matrix<double,6,7> J = robot_->getEEJacobian().data;
+   //Eigen::Matrix<double,6,7> J = toEigen(robot_->getEEJacobian());    // Not necessary
    Eigen::Matrix<double,7,7> I = Eigen::Matrix<double,7,7>::Identity();
    Eigen::Matrix<double,7,7> M = robot_->getJsim();
-// I used the "toEigen(...)" function to convert the Jacobian from "Jacobian" to a Eigen compatible format
-// I changed the names of some elements which were not defined accordingly to the "robot_" class
 
    Eigen::Matrix<double,7,6> Jpinv = weightedPseudoInverse(M,J);  // Original version
    //Eigen::Matrix<double,7,6> Jpinv = pseudoinverse(J);
@@ -80,10 +83,11 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
    // compute orientation errors
    Eigen::Matrix<double,3,1> e_o = computeOrientationError(R_d,R_e);
    Eigen::Matrix<double,3,1> dot_e_o = computeOrientationVelocityError(omega_d, omega_e, R_d, R_e);
+   
    Eigen::Matrix<double,6,1> x_tilde;
    Eigen::Matrix<double,6,1> dot_x_tilde;
    x_tilde << e_p, e_o;
-   dot_x_tilde << dot_e_p, -omega_e;//dot_e_o;
+   dot_x_tilde << dot_e_p, dot_e_o; // - omega_e;  --> UPDATED
    dot_dot_x_d << dot_dot_p_d, dot_dot_r_d;
 
    // null space control
@@ -93,11 +97,15 @@ Eigen::VectorXd KDLController::idCntr(KDL::Frame &_desPos,
 // I deleted a section with lots of commmented "cout<<" 
 
    // inverse dynamics
-   Eigen::Matrix<double,6,1> y;
-   y << dot_dot_x_d - robot_->getEEJacDotqDot()*robot_->getJntVelocities() + Kd*dot_x_tilde + Kp*x_tilde;
+   Eigen::Matrix<double,6,1> y = Eigen::Matrix<double,6,1>::Zero();     // INITIALIZED TO ZERO
+   //y << dot_dot_x_d - robot_->getEEJacDotqDot() + Kd*dot_x_tilde + Kp*x_tilde;
+   Eigen::Matrix<double,6,1> J_dot_q_dot = robot_->getEEJacDotqDot().data*robot_->getJntVelocities();
+   y << dot_dot_x_d - J_dot_q_dot + Kd*dot_x_tilde + Kp*x_tilde;
+   Eigen::Matrix<double,7,1> tau_ = Eigen::Matrix<double,7,1>::Zero();  // INITIALIZED TO ZERO
    
-   return M * (Jpinv*y + (I-Jpinv*J)*(/*- 10*grad */- 1*robot_->getJntVelocities()))
-           + robot_->getGravity() + robot_->getCoriolis();
+   tau_ = M * (Jpinv*y + (I-Jpinv*J)*(/*- 10*grad */- 1*robot_->getJntVelocities())) + robot_->getGravity() + robot_->getCoriolis();
+   // tau_ = M*(Jpinv*y) + robot_->getGravity() + robot_->getCoriolis();
+   return tau_;
 }
 
 //--------------------------- Original idCntr (UNCOMMENT to restore) --------------------------------------

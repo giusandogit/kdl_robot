@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 
     // Plan trajectory
     double traj_duration = 1.5, acc_duration = 0.5, t = 0.0, init_time_slot = 1.0;
-    double radius = 0.18;
+    double radius = 0.1;  // Original value = 0.18
 
 //--------------------------------- Modifications for Step 3a --------------------------------------------
 
@@ -158,12 +158,12 @@ int main(int argc, char **argv)
     KDLPlanner planner(traj_duration, init_position, radius); // Circular Trajectory (selection = 4, 5)
     
     // Retrieve the first trajectory point
-    trajectory_point p = planner.compute_trajectory(t);;
+    trajectory_point p = planner.compute_trajectory(t);
 
-    /*
-    //------------- This commented code does not work because of scope issues ---------------------------
+    
+/*------------------- This commented code does not work because of scope issues -------------------------------
 
-    int selection = 1;  // !! REMEMBER TO SELECT THE RIGHT TRAJECTORY IN "kdl_planner.cpp" (line 170)!!
+    int selection = 2;  // !! REMEMBER TO SELECT THE RIGHT TRAJECTORY IN "kdl_planner.cpp" (line 171)!!
 
     //  selection = 1 --> Original Linear Trajectory from Prof. Selvaggio
     //  selection = 2 --> Linear Trajectory with Trapezoidal Velocity Profile
@@ -171,41 +171,51 @@ int main(int argc, char **argv)
     //  selection = 4 --> Circular Trajectory with Trapezoidal Velocity Profile
     //  selection = 5 --> Circular Trajectory with Cubic Polynomial Velocity Profile
 
-    if(selection == 1)  // Original Linear Trajectory
+    //trajectory_point p;
+
+    if (selection > 5) //  if CASE to be sure I am running a legit trajectory
+    {
+         selection = 2;
+    }
+    else if(selection == 1)  // Original Linear Trajectory
     {
         // Constructor for Linear Trajectory
         KDLPlanner planner(traj_duration, acc_duration, init_position, end_position);
             // Retrieve the first trajectory point
-        p = planner.compute_trajectory(t);
+        //p = planner.compute_trajectory(t, selection);
     }
     else if(selection == 2)  // Linear Trajectory with Trapezoidal Velocity Profile
     {
         // Constructor for Linear Trajectory
         KDLPlanner planner(traj_duration, acc_duration, init_position, end_position);
             // Retrieve the first trajectory point
-        p = planner.compute_trajectory(t);
+        //p = planner.compute_trajectory(t, selection);
     }
     else if(selection == 3)  // Linear Trajectory with Cubic Polynomial Velocity Profile
     {
         // Constructor for Linear Trajectory
         KDLPlanner planner(traj_duration, acc_duration, init_position, end_position);
             // Retrieve the first trajectory point
-        p = planner.compute_trajectory(t);
+        //p = planner.compute_trajectory(t, selection);
     }
     else if(selection == 4)  // Circular Trajectory with Trapezoidal Velocity Profile
     {
         // Constructor for Circular Trajectory
-        KDLPlanner planner(traj_duration, init_position, radius, acc_duration);
+        KDLPlanner planner(traj_duration, init_position, radius);
             // Retrieve the first trajectory point
-        p = planner.compute_trajectory(t);
+        //p = planner.compute_trajectory(t, selection);
     }
     else if(selection == 5)  // Circular Trajectory with Cubic Polynomial Velocity Profile
     {
         // Constructor for Circular Trajectory
-        KDLPlanner planner(traj_duration, init_position, radius, acc_duration);
+        KDLPlanner planner(traj_duration, init_position, radius);
             // Retrieve the first trajectory point
-        p = planner.compute_trajectory(t);
-    }*/ 
+        //p = planner.compute_trajectory(t, selection);
+    }
+
+    // Retrieve the first trajectory point
+    trajectory_point p = planner.compute_trajectory(t, selection);
+    */
 
     // Gains
     double Kp = 50, Kd = sqrt(Kp);  //  Original Kp = 50
@@ -266,6 +276,7 @@ int main(int argc, char **argv)
 
 //----------------- Switch between control logics for Step 4 in this section of code ------------------
 
+            //double error;
             // inverse kinematics
             qd.data << jnt_pos[0], jnt_pos[1], jnt_pos[2], jnt_pos[3], jnt_pos[4], jnt_pos[5], jnt_pos[6];
             qd = robot.getInvKin(qd, des_pose);
@@ -273,13 +284,13 @@ int main(int argc, char **argv)
             //robot.getInverseKinematics(des_pose, des_cart_vel, des_cart_acc,qd,dqd,ddqd);
 
             // joint space inverse dynamics control
-            // tau = controller_.idCntr(qd, dqd, ddqd, Kp, Kd);
+            tau = controller_.idCntr(qd, dqd, ddqd, Kp, Kd);
 
-            double Kp = 7.5;  //  Original Kp = 1000 --> These values are too high
-            double Ko = 7.5;  //  Original Ko = 1000
+            // double Kp = 50;  //  Original Kp = 1000 --> These values are too high
+            // double Ko = 5;  //  Original Ko = 1000
 
-            // Cartesian space inverse dynamics control
-            tau = controller_.idCntr(des_pose, des_cart_vel, des_cart_acc,Kp, Ko, 2*sqrt(Kp), 2*sqrt(Ko));
+            // // Cartesian space inverse dynamics control
+            // tau = controller_.idCntr(des_pose, des_cart_vel, des_cart_acc,Kp, Ko, 2*sqrt(Kp), 2*sqrt(Ko));
             
 //--------------------------- End of the section to modify for Step 4 ---------------------------------
 

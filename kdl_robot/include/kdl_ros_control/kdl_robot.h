@@ -59,9 +59,9 @@ public:
     KDL::Jacobian getEEJacobian();
     KDL::Jacobian getEEBodyJacobian();
     //Eigen::Matrix<double,6,7> getEEJacDotqDot()  // Not working
-    Eigen::MatrixXd getEEJacDotqDot();    // Modified function for J_dot * q_dot
-    //KDL::Jacobian getEEJacDotqDot();    // Not working
-    //Eigen::VectorXd getEEJacDotqDot();  // Original version
+    //Eigen::MatrixXd getEEJacDotqDot();           // Not working
+    KDL::Jacobian getEEJacDotqDot();               // Modified function for J_dot
+    //Eigen::VectorXd getEEJacDotqDot();           // Original version
 
     void getInverseKinematics(KDL::Frame &f,
                               KDL::Twist &twist,
