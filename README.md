@@ -1,4 +1,5 @@
 # kdl_robot
 
+There have been problems while pushing the repository for HW03
 
-CHECK THE COMMIT "2nd commit kdl" FROM NOV 27, 2023 in the commit history
+Refer to the "correct" branch for the original files for HW02
